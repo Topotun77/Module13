@@ -1,0 +1,11 @@
+2024-07-20 01:24:38,028 | INFO | aiogram | Bot: Милый Ботик [@test_20240531_bot]
+2024-07-20 01:24:38,135 | WARNING | aiogram | Updates were skipped successfully.
+2024-07-20 01:24:38,135 | INFO | aiogram.dispatcher.dispatcher | Start polling.
+2024-07-20 01:24:47,461 | INFO | root | Получено сообщение от Svetlana Pavlova: /start
+2024-07-20 01:24:47,461 | INFO | root | Вся информация: {"message_id": 1030, "from": {"id": 1280283438, "is_bot": false, "first_name": "Svetlana Pavlova", "username": "SvetPavlova", "language_code": "ru"}, "chat": {"id": 1280283438, "first_name": "Svetlana Pavlova", "username": "SvetPavlova", "type": "private"}, "date": 1721438688, "text": "/start", "entities": [{"type": "bot_command", "offset": 0, "length": 6}]}
+2024-07-20 01:24:47,461 | INFO | root | Отправлен ответ: Привет! Я бот помогающий твоему здоровью.
+2024-07-20 01:24:56,571 | INFO | root | Получено сообщение от Svetlana Pavlova: Привет!
+2024-07-20 01:24:56,571 | INFO | root | Вся информация: {"message_id": 1031, "from": {"id": 1280283438, "is_bot": false, "first_name": "Svetlana Pavlova", "username": "SvetPavlova", "language_code": "ru"}, "chat": {"id": 1280283438, "first_name": "Svetlana Pavlova", "username": "SvetPavlova", "type": "private"}, "date": 1721438697, "text": "Привет!"}
+2024-07-20 01:24:56,572 | INFO | root | Отправлен ответ: Введите команду /start, чтобы начать общение.
+2024-07-20 01:24:59,822 | INFO | aiogram.dispatcher.dispatcher | Stop polling...
+2024-07-20 01:24:59,823 | WARNING | aiogram | Goodbye!
