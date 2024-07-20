@@ -1,0 +1,145 @@
+# Домашнее задание по теме "Клавиатура кнопок".
+# Цель: научится создавать клавиатуры и кнопки на них в Telegram-bot.
+#
+# Задача "Меньше текста, больше кликов":
+# Необходимо дополнить код предыдущей задачи, чтобы вопросы о параметрах тела для расчёта
+# калорий выдавались по нажатию кнопки.
+# Измените massage_handler для функции set_age. Теперь этот хэндлер будет реагировать на
+# текст 'Рассчитать', а не на 'Calories'.
+# Создайте клавиатуру ReplyKeyboardMarkup и 2 кнопки KeyboardButton на ней со следующим
+# текстом: 'Рассчитать' и 'Информация'. Сделайте так, чтобы клавиатура подстраивалась
+# под размеры интерфейса устройства при помощи параметра resize_keyboard.
+# Используйте ранее созданную клавиатуру в ответе функции start, используя параметр
+# reply_markup.
+# В итоге при команде /start у вас должна присылаться клавиатура с двумя кнопками.
+# При нажатии на кнопку с надписью 'Рассчитать' срабатывает функция set_age с которой
+# начинается работа машины состояний для age, growth и weight.
+
+from aiogram import Bot, Dispatcher, executor, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+# import asyncio
+import logging
+
+API = 'XXX'
+bot = Bot(token=API)
+dp = Dispatcher(bot, storage=MemoryStorage())
+kb = ReplyKeyboardMarkup(resize_keyboard=True)
+butt_1 = KeyboardButton(text='Рассчитать')
+butt_2 = KeyboardButton(text='Информация')
+kb.row(butt_1, butt_2)
+# kb.insert(butt_1)
+# kb.insert(butt_2)
+
+logging.basicConfig(
+    filename='tg-bot.log', filemode='w', encoding='utf-8',
+    format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+    level=logging.INFO)
+
+
+def decor_log(func, message, txt):
+    async def log_writer(*args, **kwargs):
+        logging.info(f'Получено сообщение от {message["from"]["first_name"]}: {message["text"]}')
+        # logging.info(f'Вся информация: {message}')
+        rez = await func(*args, **kwargs)
+        logging.info(f'Отправлен ответ: {txt}')
+        return rez
+
+    return log_writer
+
+
+class UserState(StatesGroup):
+    gender = State()
+    age = State()
+    growth = State()
+    weight = State()
+
+class UserData():
+    DATA = {}
+
+
+@dp.message_handler(commands=['start'])
+async def start(message):
+    txt = ('Привет! Я бот помогающий твоему здоровью. Хотите узнать сколько калорий '
+           'Вам нужно потреблять в день для здорового питания? Нажмите на кнопку "Рассчитать".')
+    # message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt, reply_markup=kb)
+
+
+@dp.message_handler(text='Рассчитать')
+async def set_gender(message):
+    print(f'Сообщение от {message["from"]["first_name"]}')
+    UserData.DATA[message["from"]["first_name"]] = {}
+    txt = 'Введите свой пол (М/Ж):'
+    message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt)
+    await UserState.gender.set()
+
+
+@dp.message_handler(state=UserState.gender)
+async def set_age(message, state):
+    await state.update_data(gender=message.text)
+    txt = 'Введите свой возраст:'
+    message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt)
+    await UserState.age.set()
+
+
+@dp.message_handler(state=UserState.age)
+async def set_growth(message, state):
+    await state.update_data(age=message.text)
+    txt = 'Введите свой рост:'
+    message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt)
+    await UserState.growth.set()
+
+
+@dp.message_handler(state=UserState.growth)
+async def set_weight(message, state):
+    await state.update_data(growth=message.text)
+    txt = 'Введите свой вес:'
+    message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt)
+    await UserState.weight.set()
+
+
+@dp.message_handler(state=UserState.weight)
+async def send_calories(message, state):
+    await state.update_data(weight=message.text)
+    UserData.DATA[message["from"]["first_name"]] |= await state.get_data()
+    # locals().update(UserData.DATA[message["from"]["first_name"]])
+    print(UserData.DATA)
+
+    data = UserData.DATA[message["from"]["first_name"]]
+    try:
+        if data['gender'].upper() == 'Ж':
+            calories = 10 * float(data['weight']) + 6.25 * float(data['growth']) - 5 * float(data['age']) - 161
+        elif data['gender'].upper() == 'М':
+            calories = 10 * float(data['weight']) + 6.25 * float(data['growth']) - 5 * float(data['age']) + 5
+        else:
+            raise ValueError
+    except ValueError:
+        txt = 'Вы ввели ошибочные данные'
+    else:
+        txt = f'Ваша норма калорий по формуле Миффлина-Сан Жеора: {calories}'
+    message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt)
+    await state.finish()
+
+
+@dp.message_handler(text='Информация')
+async def all_massages(message):
+    txt = 'Я - невероятно крутой бот, который знает секрет как похудеть!'
+    message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt)
+
+@dp.message_handler()
+async def all_massages(message):
+    txt = 'Введите команду /start, чтобы начать общение.'
+    message.answer = decor_log(message.answer, message, txt)
+    await message.answer(txt)
+
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
