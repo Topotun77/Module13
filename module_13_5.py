@@ -63,7 +63,7 @@ class UserData():
 async def start(message):
     txt = ('Привет! Я бот помогающий твоему здоровью. Хотите узнать сколько калорий '
            'Вам нужно потреблять в день для здорового питания? Нажмите на кнопку "Рассчитать".')
-    # message.answer = decor_log(message.answer, message, txt)
+    message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt, reply_markup=kb)
 
 
@@ -119,10 +119,20 @@ async def send_calories(message, state):
             calories = 10 * float(data['weight']) + 6.25 * float(data['growth']) - 5 * float(data['age']) + 5
         else:
             raise ValueError
-    except ValueError:
+        imb = round(float(data['weight']) / (float(data['growth']) / 100) ** 2, 1)
+    except ValueError or ZeroDivisionError:
         txt = 'Вы ввели ошибочные данные'
     else:
-        txt = f'Ваша норма калорий по формуле Миффлина-Сан Жеора: {calories}'
+        txt = (f'Ваша норма калорий по формуле Миффлина-Сан Жеора: {calories} калорий\n\n'
+               f'Индекс массы тела (ИМТ): {imb} кг/кв.м\n\n'
+               f'В соответствии с рекомендациями ВОЗ разработана следующая интерпретация показателей ИМТ:\n\n'
+               f'16 и менее - Выраженный дефицит массы тела\n\n'
+               f'16-18,5 - Недостаточная (дефицит) масса тела\n\n'
+               f'18,5—25 - Норма\n\n'
+               f'25—30 - Избыточная масса тела (предожирение)\n\n'
+               f'30—35 - Ожирение 1 степени\n\n'
+               f'35—40 - Ожирение 2 степени\n\n'
+               f'40 и более - Ожирение 3 степени')
     message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt)
     await state.finish()
