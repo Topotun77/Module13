@@ -91,8 +91,7 @@ async def start(message: types.Message):
 
 @dp.message_handler(text='Рассчитать')
 async def main_menu(message: types.Message):
-    print(f'Сообщение от {message["from"]["first_name"]}')
-    UserData.DATA[message["from"]["first_name"]] = {}
+    print(f'Сообщение от {message.from_user.first_name}')
     txt = 'Выберите опцию:'
     message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt, reply_markup=inline_kb)
@@ -112,6 +111,8 @@ async def get_formulas(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text='calories')
 async def set_gender(call: types.CallbackQuery):
+    # if not UserData.DATA[call.from_user.first_name]:
+    UserData.DATA[call.from_user.first_name] = {}
     txt = 'Введите свой пол (М/Ж):'
     call.answer = decor_log(call.answer, call, txt)
     await call.message.answer(txt)
@@ -130,7 +131,7 @@ async def set_age(message: types.Message, state):
 
 @dp.message_handler(state=UserState.age)
 async def set_growth(message: types.Message, state):
-    await state.update_data(age=message.text)
+    await state.update_data(age=message.text.replace(',', '.'))
     txt = 'Введите свой рост:'
     message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt)
@@ -139,7 +140,7 @@ async def set_growth(message: types.Message, state):
 
 @dp.message_handler(state=UserState.growth)
 async def set_weight(message: types.Message, state):
-    await state.update_data(growth=message.text)
+    await state.update_data(growth=message.text.replace(',', '.'))
     txt = 'Введите свой вес:'
     message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt)
@@ -148,12 +149,13 @@ async def set_weight(message: types.Message, state):
 
 @dp.message_handler(state=UserState.weight)
 async def send_calories(message: types.Message, state):
-    await state.update_data(weight=message.text)
-    UserData.DATA[message["from"]["first_name"]] |= await state.get_data()
+    await state.update_data(weight=message.text.replace(',', '.'))
+    UserData.DATA[message.from_user.first_name] |= await state.get_data()
     # locals().update(UserData.DATA[message["from"]["first_name"]])
     print(UserData.DATA)
 
     data = UserData.DATA[message["from"]["first_name"]]
+
     try:
         if data['gender'].upper() == 'Ж':
             calories = 10 * float(data['weight']) + 6.25 * float(data['growth']) - 5 * float(data['age']) - 161
@@ -168,13 +170,13 @@ async def send_calories(message: types.Message, state):
         txt = (f'Ваша норма калорий по формуле Миффлина-Сан Жеора: {calories} калорий\n\n'
                f'Индекс массы тела (ИМТ): {imb} кг/кв.м\n\n'
                f'В соответствии с рекомендациями ВОЗ разработана следующая интерпретация показателей ИМТ:\n\n'
-               f'16 и менее - Выраженный дефицит массы тела\n\n'
-               f'16-18,5 - Недостаточная (дефицит) масса тела\n\n'
-               f'18,5—25 - Норма\n\n'
-               f'25—30 - Избыточная масса тела (предожирение)\n\n'
-               f'30—35 - Ожирение 1 степени\n\n'
-               f'35—40 - Ожирение 2 степени\n\n'
-               f'40 и более - Ожирение 3 степени')
+               f'16 и менее — Выраженный дефицит массы тела\n\n'
+               f'16 - 18,5 — Недостаточная (дефицит) масса тела\n\n'
+               f'18,5 - 25 — Норма\n\n'
+               f'25 - 30 — Избыточная масса тела (предожирение)\n\n'
+               f'30 - 35 — Ожирение 1 степени\n\n'
+               f'35 - 40 — Ожирение 2 степени\n\n'
+               f'40 и более — Ожирение 3 степени')
     message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt)
     await state.finish()
