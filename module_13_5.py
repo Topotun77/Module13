@@ -139,7 +139,7 @@ async def send_calories(message, state):
 
 
 @dp.message_handler(text='Информация')
-async def all_massages(message):
+async def info(message):
     txt = 'Я - невероятно крутой бот, который знает секрет как похудеть!'
     message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt)
