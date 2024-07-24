@@ -57,7 +57,7 @@ logging.basicConfig(
     level=logging.INFO)
 
 
-def decor_log(func, message: types.Message, txt):
+def decor_log(func, message, txt):
     async def log_writer(*args, **kwargs):
         try:
             logging.info(f'Получено сообщение от {message.from_user.first_name}: {message["text"]}')
@@ -111,8 +111,8 @@ async def get_formulas(call: types.CallbackQuery):
 
 @dp.callback_query_handler(text='calories')
 async def set_gender(call: types.CallbackQuery):
-    # if not UserData.DATA[call.from_user.first_name]:
-    UserData.DATA[call.from_user.first_name] = {}
+    if call.from_user.first_name not in UserData.DATA:
+        UserData.DATA[call.from_user.first_name] = {}
     txt = 'Введите свой пол (М/Ж):'
     call.answer = decor_log(call.answer, call, txt)
     await call.message.answer(txt)
@@ -183,7 +183,7 @@ async def send_calories(message: types.Message, state):
 
 
 @dp.message_handler(text='Информация')
-async def all_massages(message: types.Message):
+async def info(message: types.Message):
     txt = 'Я - невероятно крутой бот, который знает секрет как похудеть!'
     message.answer = decor_log(message.answer, message, txt)
     await message.answer(txt)
